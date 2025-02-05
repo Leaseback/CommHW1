@@ -117,4 +117,4 @@ def main():
 if __name__ == "__main__":
     # Specify the path to your .pcap file
     pcap_file = "C:\\Users\\Kyle\\Downloads\\test.pcap"
-    pktsniffer(pcap_file)
+    main()
