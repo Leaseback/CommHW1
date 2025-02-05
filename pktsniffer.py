@@ -79,20 +79,51 @@ def display_icmp_header(packet):
     else:
         print("\nNo ICMP layer found in this packet.")
 
-def pktsniffer(pcap_file):
+def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None):
     packets = rdpcap(pcap_file)
 
     for packet in packets:
-        display_ethernet_header(packet)
-        display_ip_header(packet)
+        if host:
+            if packet.haslayer("IP"):
+                ip_packet = packet["IP"]
 
-        # Check for encapsulated protocols and display respective headers
-        if packet.haslayer("TCP"):
-            display_tcp_header(packet)
-        elif packet.haslayer("UDP"):
-            display_udp_header(packet)
-        elif packet.haslayer("ICMP"):
-            display_icmp_header(packet)
+                # If packet IP does not match host ip move onto next packet
+                # Otherwise continue filtering based off of other filters
+                if host != ip_packet.src and host != ip_packet.dst:
+                    continue
+
+        if port:
+            if packet.haslayer("TCP"):
+                if port != packet["TCP"].sport and port != packet["TCP"].dport:
+                    continue
+                elif port != packet["UDP"].sport and port != packet["UDP"].dport:
+                    continue
+
+        if ip:
+            if packet.haslayer("IP"):
+                ip_packet = packet["IP"]
+                if ip != ip_packet.src and ip != ip_packet.dst:
+                    continue
+
+                # Filter by TCP, UDP, or ICMP protocol
+                if tcp and packet.haslayer("TCP"):
+                    display_ethernet_header(packet)
+                    display_ip_header(packet)
+                    display_tcp_header(packet)
+
+                elif udp and packet.haslayer("UDP"):
+                    display_ethernet_header(packet)
+                    display_ip_header(packet)
+                    display_udp_header(packet)
+
+                elif icmp and packet.haslayer("ICMP"):
+                    display_ethernet_header(packet)
+                    display_ip_header(packet)
+                    display_icmp_header(packet)
+
+                elif not tcp and not udp and not icmp:  # If no protocol filter is set
+                    display_ethernet_header(packet)
+                    display_ip_header(packet)
 
 
 def main():
