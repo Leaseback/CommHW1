@@ -1,3 +1,5 @@
+import argparse
+
 from scapy.all import rdpcap
 
 
@@ -91,6 +93,26 @@ def pktsniffer(pcap_file):
             display_udp_header(packet)
         elif packet.haslayer("ICMP"):
             display_icmp_header(packet)
+
+
+def main():
+    # Setup argument parser
+    parser = argparse.ArgumentParser(description="Network Packet Analyzer (pktsniffer)")
+    parser.add_argument("pcap_file", type=str, help="Path to the .pcap file to analyze")
+    parser.add_argument("host", nargs="?", type=str, help="Filter packets by host IP address")
+    parser.add_argument("port", nargs="?", type=int, help="Filter packets by port")
+    parser.add_argument("ip", nargs="?", type=str, help="Filter packets by source or destination IP")
+    parser.add_argument("--tcp", action="store_true", help="Filter only TCP packets")
+    parser.add_argument("--udp", action="store_true", help="Filter only UDP packets")
+    parser.add_argument("--icmp", action="store_true", help="Filter only ICMP packets")
+    parser.add_argument("net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Run packet analyzer with the provided arguments
+    pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp, net=args.net)
+
 
 if __name__ == "__main__":
     # Specify the path to your .pcap file
