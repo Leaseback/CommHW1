@@ -139,9 +139,6 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
             if packet.haslayer("UDP"):
                 if port != packet["UDP"].sport and port != packet["UDP"].dport:
                     continue
-            if packet.haslayer("ICMP"):
-                if port != packet["ICMP"].sport and port != packet["ICMP"].dport:
-                    continue
 
         # If net filter is given, check if the packet's source or destination IP is in the network range
         if net:
