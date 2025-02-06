@@ -167,13 +167,13 @@ def main():
     parser.add_argument("-r", "--pcap_file", type=str, help="Path to the .pcap file to analyze", required=True)
 
     # Optional arguments
-    parser.add_argument("--host", nargs="?", type=str, help="Filter packets by host IP address")
-    parser.add_argument("--port", nargs="?", type=int, help="Filter packets by port")
-    parser.add_argument("--ip", nargs="?", type=str, help="Filter packets by source or destination IP")
-    parser.add_argument("--tcp", action="store_true", help="Filter only TCP packets")
-    parser.add_argument("--udp", action="store_true", help="Filter only UDP packets")
-    parser.add_argument("--icmp", action="store_true", help="Filter only ICMP packets")
-    parser.add_argument("--net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
+    parser.add_argument("-host", nargs="?", type=str, help="Filter packets by host IP address")
+    parser.add_argument("-port", nargs="?", type=int, help="Filter packets by port")
+    parser.add_argument("-ip", nargs="?", type=str, help="Filter packets by source or destination IP")
+    parser.add_argument("-tcp", action="store_true", help="Filter only TCP packets")
+    parser.add_argument("-udp", action="store_true", help="Filter only UDP packets")
+    parser.add_argument("-icmp", action="store_true", help="Filter only ICMP packets")
+    parser.add_argument("-net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
     parser.add_argument("-c", nargs="?", type=int, help="Max amount of packets to read")
 
     # Parse arguments
