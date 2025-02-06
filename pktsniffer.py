@@ -1,4 +1,5 @@
 import argparse
+import ipaddress
 
 from scapy.all import rdpcap
 
@@ -82,8 +83,37 @@ def display_icmp_header(packet):
         print("\nNo ICMP layer found in this packet.")
 
 
-def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None):
+def check_packet_network(packet, net="192.168.1.0/24"):
+    """
+    Check if the source or destination IP of a packet belongs to the given network.
+
+    :param packet: Scapy packet
+    :param net: Network in CIDR notation (default "192.168.1.0/24")
+    :return: Boolean, True if packet matches network, False otherwise
+    """
+    try:
+        # Parse the network into an IPNetwork object
+        network = ipaddress.IPv4Network(net)
+
+        # Check if the packet has the IP layer
+        if packet.haslayer(IP):
+            ip_packet = packet[IP]
+
+            # Check if source or destination IP is in the network
+            if ipaddress.IPv4Address(ip_packet.src) in network or ipaddress.IPv4Address(ip_packet.dst) in network:
+                return True
+        return False
+    except Exception as e:
+        print(f"Error checking network: {e}")
+        return False
+
+
+def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None, c=None):
     packets = rdpcap(pcap_file)
+
+    # If the count 'c' is provided, limit the number of packets to process
+    if c:
+        packets = packets[:c]  # Slice the list to take only the first 'c' packets
 
     for packet in packets:
 
@@ -108,6 +138,11 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
                 if port != packet["UDP"].sport and port != packet["UDP"].dport:
                     continue
 
+        # If net filter is given, check if the packet's source or destination IP is in the network range
+        if net:
+            if not check_packet_network(packet, net):
+                continue
+
         # if packet.haslayer("IP"):
         #     ip_packet = packet["IP"]
         #     if ip != ip_packet.src and ip != ip_packet.dst:
@@ -120,16 +155,12 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
 
         if packet.haslayer("UDP") and tcp is False and icmp is False:
             display_ip_header(packet)
-            display_icmp_header(packet)
+            display_udp_header(packet)
 
         if packet.haslayer("ICMP") and tcp is False and udp is False:
             display_ip_header(packet)
-            display_udp_header(packet)
-
-        elif icmp and packet.haslayer("ICMP"):
-            display_ethernet_header(packet)
-            display_ip_header(packet)
             display_icmp_header(packet)
+
 
 
 def main():
@@ -146,14 +177,15 @@ def main():
     parser.add_argument("--tcp", action="store_true", help="Filter only TCP packets")
     parser.add_argument("--udp", action="store_true", help="Filter only UDP packets")
     parser.add_argument("--icmp", action="store_true", help="Filter only ICMP packets")
-    parser.add_argument("net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
+    parser.add_argument("--net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
+    parser.add_argument("-c", nargs="?", type=int, help="Max amount of packets to read")
 
     # Parse arguments
     args = parser.parse_args()
 
     # Run packet analyzer with the provided arguments
     pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp,
-               net=args.net)
+               net=args.net, c=args.c)
 
 
 if __name__ == "__main__":
