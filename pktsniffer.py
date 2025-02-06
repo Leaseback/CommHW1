@@ -56,6 +56,7 @@ def display_tcp_header(packet):
     else:
         print("\nNo TCP layer found in this packet.")
 
+
 def display_udp_header(packet):
     if packet.haslayer("UDP"):
         udp_packet = packet["UDP"]
@@ -66,6 +67,7 @@ def display_udp_header(packet):
         print(f"  Checksum: {hex(udp_packet.chksum)}")
     else:
         print("\nNo UDP layer found in this packet.")
+
 
 def display_icmp_header(packet):
     if packet.haslayer("ICMP"):
@@ -79,10 +81,13 @@ def display_icmp_header(packet):
     else:
         print("\nNo ICMP layer found in this packet.")
 
+
 def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None):
     packets = rdpcap(pcap_file)
 
     for packet in packets:
+
+        # If host command is given, filter out all packets without matching src or dst ip
         if host:
             if packet.haslayer("IP"):
                 ip_packet = packet["IP"]
@@ -91,48 +96,53 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
                 # Otherwise continue filtering based off of other filters
                 if host != ip_packet.src and host != ip_packet.dst:
                     continue
+            else:
+                continue
 
+        # If port command is given, filter out all packets without matching port
         if port:
             if packet.haslayer("TCP"):
                 if port != packet["TCP"].sport and port != packet["TCP"].dport:
                     continue
-                elif port != packet["UDP"].sport and port != packet["UDP"].dport:
+            if packet.haslayer("UDP"):
+                if port != packet["UDP"].sport and port != packet["UDP"].dport:
                     continue
 
-        if ip:
-            if packet.haslayer("IP"):
-                ip_packet = packet["IP"]
-                if ip != ip_packet.src and ip != ip_packet.dst:
-                    continue
+        # if packet.haslayer("IP"):
+        #     ip_packet = packet["IP"]
+        #     if ip != ip_packet.src and ip != ip_packet.dst:
+        #         continue
 
-                # Filter by TCP, UDP, or ICMP protocol
-                if tcp and packet.haslayer("TCP"):
-                    display_ethernet_header(packet)
-                    display_ip_header(packet)
-                    display_tcp_header(packet)
+        # If it is a TCP packet and --udp flag is not on
+        if packet.haslayer("TCP") and udp is False and icmp is False:
+            display_ip_header(packet)
+            display_tcp_header(packet)
 
-                elif udp and packet.haslayer("UDP"):
-                    display_ethernet_header(packet)
-                    display_ip_header(packet)
-                    display_udp_header(packet)
+        if packet.haslayer("UDP") and tcp is False and icmp is False:
+            display_ip_header(packet)
+            display_icmp_header(packet)
 
-                elif icmp and packet.haslayer("ICMP"):
-                    display_ethernet_header(packet)
-                    display_ip_header(packet)
-                    display_icmp_header(packet)
+        if packet.haslayer("ICMP") and tcp is False and udp is False:
+            display_ip_header(packet)
+            display_udp_header(packet)
 
-                elif not tcp and not udp and not icmp:  # If no protocol filter is set
-                    display_ethernet_header(packet)
-                    display_ip_header(packet)
+        elif icmp and packet.haslayer("ICMP"):
+            display_ethernet_header(packet)
+            display_ip_header(packet)
+            display_icmp_header(packet)
 
 
 def main():
     # Setup argument parser
     parser = argparse.ArgumentParser(description="Network Packet Analyzer (pktsniffer)")
-    parser.add_argument("pcap_file", type=str, help="Path to the .pcap file to analyze")
-    parser.add_argument("host", nargs="?", type=str, help="Filter packets by host IP address")
-    parser.add_argument("port", nargs="?", type=int, help="Filter packets by port")
-    parser.add_argument("ip", nargs="?", type=str, help="Filter packets by source or destination IP")
+
+    # Required argument for pcap file
+    parser.add_argument("-r", "--pcap_file", type=str, help="Path to the .pcap file to analyze", required=True)
+
+    # Optional arguments
+    parser.add_argument("--host", nargs="?", type=str, help="Filter packets by host IP address")
+    parser.add_argument("--port", nargs="?", type=int, help="Filter packets by port")
+    parser.add_argument("--ip", nargs="?", type=str, help="Filter packets by source or destination IP")
     parser.add_argument("--tcp", action="store_true", help="Filter only TCP packets")
     parser.add_argument("--udp", action="store_true", help="Filter only UDP packets")
     parser.add_argument("--icmp", action="store_true", help="Filter only ICMP packets")
@@ -142,7 +152,8 @@ def main():
     args = parser.parse_args()
 
     # Run packet analyzer with the provided arguments
-    pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp, net=args.net)
+    pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp,
+               net=args.net)
 
 
 if __name__ == "__main__":
