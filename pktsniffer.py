@@ -50,7 +50,9 @@ def display_tcp_header(packet):
         print(f"  Sequence number: {tcp_packet.seq}")
         print(f"  Acknowledgment number: {tcp_packet.ack}")
         print(f"  Data offset: {tcp_packet.dataofs * 4} bytes")
-        print(f"  Flags: {bin(tcp_packet.flags)}")
+        # Display flags in binary
+        flags_bin = bin(tcp_packet.flags.value)
+        print(f"  Flags: {flags_bin}")
         print(f"  Window size: {tcp_packet.window}")
         print(f"  Checksum: {hex(tcp_packet.chksum)}")
         print(f"  Urgent pointer: {tcp_packet.urgptr}")
@@ -137,16 +139,14 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
             if packet.haslayer("UDP"):
                 if port != packet["UDP"].sport and port != packet["UDP"].dport:
                     continue
+            if packet.haslayer("ICMP"):
+                if port != packet["ICMP"].sport and port != packet["ICMP"].dport:
+                    continue
 
         # If net filter is given, check if the packet's source or destination IP is in the network range
         if net:
             if not check_packet_network(packet, net):
                 continue
-
-        # if packet.haslayer("IP"):
-        #     ip_packet = packet["IP"]
-        #     if ip != ip_packet.src and ip != ip_packet.dst:
-        #         continue
 
         # If it is a TCP packet and --udp flag is not on
         if packet.haslayer("TCP") and udp is False and icmp is False:
@@ -160,7 +160,6 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
         if packet.haslayer("ICMP") and tcp is False and udp is False:
             display_ip_header(packet)
             display_icmp_header(packet)
-
 
 
 def main():
