@@ -96,8 +96,8 @@ def check_packet_network(packet, net="192.168.1.0/24"):
         network = ipaddress.IPv4Network(net)
 
         # Check if the packet has the IP layer
-        if packet.haslayer(IP):
-            ip_packet = packet[IP]
+        if packet.haslayer("IP"):
+            ip_packet = packet["IP"]
 
             # Check if source or destination IP is in the network
             if ipaddress.IPv4Address(ip_packet.src) in network or ipaddress.IPv4Address(ip_packet.dst) in network:
