@@ -37,6 +37,18 @@ def display_ip_header(packet):
         print(f"  Header checksum: {hex(ip_packet.chksum)}")
         print(f"  Source IP: {ip_packet.src}")
         print(f"  Destination IP: {ip_packet.dst}")
+
+    elif packet.haslayer("IPv6"):
+        ip6_packet = packet["IPv6"]
+        print("\nIPv6 Header:")
+        print(f"  Version: {ip6_packet.version}")
+        print(f"  Traffic Class: {ip6_packet.tc}")
+        print(f"  Flow Label: {ip6_packet.fl}")
+        print(f"  Payload Length: {ip6_packet.plen} bytes")
+        print(f"  Next Header: {ip6_packet.nh}")
+        print(f"  Hop Limit: {ip6_packet.hlim}")
+        print(f"  Source IP: {ip6_packet.src}")
+        print(f"  Destination IP: {ip6_packet.dst}")
     else:
         print("\nNo IP layer found in this packet.")
 
@@ -110,7 +122,7 @@ def check_packet_network(packet, net="192.168.1.0/24"):
         return False
 
 
-def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None, c=None):
+def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None, c=None, ip_multicast=False, ip6_multicast=False):
     packets = rdpcap(pcap_file)
 
     # If the count 'c' is provided, limit the number of packets to process
@@ -145,6 +157,26 @@ def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, i
             if not check_packet_network(packet, net):
                 continue
 
+        # If the packet is IPv4 multicast
+        if ip_multicast:
+            if packet.haslayer("IP"):
+                ip_packet = packet["IP"]
+                # IPv4 multicast address range: 224.0.0.0 to 233.255.255.255
+                if not (224 <= int(ip_packet.dst.split(".")[0]) <= 233):
+                    continue
+            else:
+                continue
+
+        # If the packet is IPv6 multicast
+        if ip6_multicast:
+            if packet.haslayer("IPv6"):
+                ip6_packet = packet["IPv6"]
+                # IPv6 multicast addresses start with ff00::/8
+                if not ip6_packet.dst.startswith("ff"):
+                    continue
+            else:
+                continue
+
         # If it is a TCP packet and --udp flag is not on
         if packet.haslayer("TCP") and udp is False and icmp is False:
             display_ip_header(packet)
@@ -176,12 +208,16 @@ def main():
     parser.add_argument("-net", nargs="?", type=str, help="Filter packets by network (e.g., 192.168.1.0/24)")
     parser.add_argument("-c", nargs="?", type=int, help="Max amount of packets to read")
 
+    # New arguments for multicast filtering
+    parser.add_argument("--ip_multicast", action="store_true", help="Filter IPv4 multicast packets")
+    parser.add_argument("--ip6_multicast", action="store_true", help="Filter IPv6 multicast packets")
+
     # Parse arguments
     args = parser.parse_args()
 
     # Run packet analyzer with the provided arguments
     pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp,
-               net=args.net, c=args.c)
+               net=args.net, c=args.c, ip_multicast=args.ip_multicast, ip6_multicast=args.ip6_multicast)
 
 
 if __name__ == "__main__":
