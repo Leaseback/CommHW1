@@ -202,7 +202,6 @@ def main():
     # Optional arguments
     parser.add_argument("-host", nargs="?", type=str, help="Filter packets by host IP address")
     parser.add_argument("-port", nargs="?", type=int, help="Filter packets by port")
-    parser.add_argument("-ip", nargs="?", type=str, help="Filter packets by source or destination IP")
     parser.add_argument("-tcp", action="store_true", help="Filter only TCP packets")
     parser.add_argument("-udp", action="store_true", help="Filter only UDP packets")
     parser.add_argument("-icmp", action="store_true", help="Filter only ICMP packets")
