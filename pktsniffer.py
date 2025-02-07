@@ -121,7 +121,8 @@ def check_packet_network(packet, net="192.168.1.0/24"):
         print(f"Error checking network: {e}")
         return False
 
-
+# Handles all filtering commands, and then calls appropriate print function to print the packets that should be displayed
+# after all filters
 def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None, c=None, ip_multicast=False, ip6_multicast=False):
     packets = rdpcap(pcap_file)
 
@@ -221,6 +222,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # Specify the path to your .pcap file
-    pcap_file = "C:\\Users\\Kyle\\Downloads\\test.pcap"
     main()
