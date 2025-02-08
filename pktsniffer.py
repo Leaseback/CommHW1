@@ -123,7 +123,7 @@ def check_packet_network(packet, net="192.168.1.0/24"):
 
 # Handles all filtering commands, and then calls appropriate print function to print the packets that should be displayed
 # after all filters
-def pktsniffer(pcap_file, host=None, port=None, ip=None, tcp=False, udp=False, icmp=False, net=None, c=None, ip_multicast=False, ip6_multicast=False):
+def pktsniffer(pcap_file, host=None, port=None, tcp=False, udp=False, icmp=False, net=None, c=None, ip_multicast=False, ip6_multicast=False):
     packets = rdpcap(pcap_file)
 
     # If the count 'c' is provided, limit the number of packets to process
@@ -216,7 +216,7 @@ def main():
     args = parser.parse_args()
 
     # Run packet analyzer with the provided arguments
-    pktsniffer(args.pcap_file, host=args.host, port=args.port, ip=args.ip, tcp=args.tcp, udp=args.udp, icmp=args.icmp,
+    pktsniffer(args.pcap_file, host=args.host, port=args.port, tcp=args.tcp, udp=args.udp, icmp=args.icmp,
                net=args.net, c=args.c, ip_multicast=args.ip_multicast, ip6_multicast=args.ip6_multicast)
 
 
